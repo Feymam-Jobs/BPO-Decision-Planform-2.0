@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BPO Priority Dashboard</title>
+<link rel="icon" type="image/png" href="../data/unnamed.png">
+<style>
+:root{--bg:#f5f6f8;--card:#ffffff;--text:#1c2230;--muted:#5b6475;--grid:#e3e6ec;--line:#d8dce4;--crit:#d1344b;--high:#e8833a;--med:#d9a400;--low:#2f9e6b;--accent:#3b6fe0}
+@media (prefers-color-scheme: dark){:root{--bg:#12151c;--card:#1b202b;--text:#e8ebf2;--muted:#9aa3b5;--grid:#2c3342;--line:#2c3342;--crit:#ef5a70;--high:#f09a58;--med:#e8b923;--low:#4fc18d;--accent:#6b93f0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:20px 24px 4px}
+h1{margin:0;font-size:22px}
+#gen{margin-top:4px;color:var(--muted);font-size:13px}
+main{padding:12px 24px 32px;max-width:1500px;margin:0 auto}
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:8px 0 16px}
+.filters label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted)}
+.filters select,.filters input{min-width:150px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text);font:inherit}
+.filters button{padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text);font:inherit;cursor:pointer}
+.filters button:hover{border-color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:10px;padding:12px 14px}
+.kpi.crit{border-top-color:var(--crit)}.kpi.high{border-top-color:var(--high)}.kpi.med{border-top-color:var(--med)}.kpi.low{border-top-color:var(--low)}
+.kl{font-size:12px;color:var(--muted)}
+.kv{font-size:28px;font-weight:700;line-height:1.2;margin:2px 0}
+.ks{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.card h3{margin:0 0 8px;font-size:14px}
+.cw{position:relative;height:270px}
+#chartNote{display:none;padding:10px 14px;margin-bottom:12px;border:1px solid var(--high);border-radius:8px;background:var(--card);font-size:13px}
+.tw{overflow:auto;max-height:520px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+td:nth-child(5),td:nth-child(6){white-space:normal;min-width:160px}
+th{position:sticky;top:0;background:var(--card);cursor:pointer;user-select:none;z-index:1}
+th:hover{color:var(--accent)}
+tbody tr:hover{background:var(--bg)}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;color:#fff}
+.b-CRITICAL{background:var(--crit)}.b-HIGH{background:var(--high)}.b-MEDIUM{background:var(--med);color:#1c2230}.b-LOW{background:var(--low)}
+#count{margin:0 0 8px;color:var(--muted);font-size:12px}
+#empty{display:none;padding:18px;text-align:center;color:var(--muted)}
+.agent-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.agent-head p{margin:0 0 10px;color:var(--muted);font-size:12px}
+.agent-controls{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.agent-controls select{appearance:none;min-width:210px;padding:9px 40px 9px 13px;border:1px solid var(--line);border-radius:10px;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2367798e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 13px center;color:var(--text);font:600 12px system-ui,-apple-system,"Segoe UI",sans-serif;box-shadow:0 2px 5px #1c355510;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease}
+.agent-controls select:hover{border-color:var(--accent)}
+.agent-controls select:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,111,224,.18)}
+.agent-controls select optgroup{font-weight:700;color:var(--text)}
+.agent-controls select option{font-weight:400}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+select{
+appearance:none;-webkit-appearance:none;-moz-appearance:none;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2367798e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+background-repeat:no-repeat;background-position:right 10px center;background-size:14px 14px;
+padding-right:34px!important;cursor:pointer;
+transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease
+}
+select:hover{border-color:var(--accent);background-color:var(--card)}
+select:focus,select:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,111,224,.18)}
+select option,select optgroup{background:var(--card);color:var(--text)}
+.agent-list{display:grid;gap:10px}
+.agent-row{display:grid;grid-template-columns:minmax(90px,160px) 1fr 54px;gap:10px;align-items:center;font-size:12px}
+.agent-track{height:9px;border-radius:9px;background:var(--grid);overflow:hidden}
+.agent-fill{height:100%;border-radius:9px;background:var(--low)}
+.agent-empty{padding:18px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+<h1>BPO Priority Automation Platform · Dashboard</h1>
+<div id="gen"></div>
+</header>
+<main>
+<section class="filters">
+<label>Prioridad<select id="fPri"><option value="">Todas</option><option value="CRITICAL">Crítica</option><option value="HIGH">Alta</option><option value="MEDIUM">Media</option><option value="LOW">Baja</option></select></label>
+<label>Categoría<select id="fCat"></select></label>
+<label>Nivel de cliente<select id="fTier"></select></label>
+<label>Estado<select id="fSt"></select></label>
+<label>Buscar<input id="fQ" type="search" placeholder="ID, cliente, asunto..."></label>
+<button id="reset" type="button">Limpiar filtros</button>
+</section>
+<div id="chartNote">No se pudo cargar la librería de gráficos (se necesita conexión a internet). Los indicadores y la tabla funcionan igual.</div>
+<section id="kpis" class="kpis"></section>
+<section class="card" style="margin-bottom:16px">
+<div class="agent-head"><div><h3 id="agentTitle">Rendimiento TMO</h3><p id="agentDescription">Promedio por agente frente a la meta</p></div><div class="agent-controls"><label class="sr-only" for="agentView">Formato de visualización del rendimiento</label><select id="agentView" aria-label="Formato de visualización del rendimiento"><optgroup label="Tiempo medio de operación (TMO)"><option value="tmo-bar">Barras</option><option value="tmo-line">Línea</option></optgroup><optgroup label="Cumplimiento de la meta"><option value="percentage-bar">Barras (%)</option><option value="percentage-line">Línea (%)</option></optgroup></select></div></div>
+<div id="agentPerformance" class="agent-list"></div>
+</section>
+<section class="grid">
+<div class="card"><h3>Solicitudes por prioridad</h3><div class="cw"><canvas id="cPri"></canvas></div></div>
+<div class="card"><h3>Categorías por prioridad</h3><div class="cw"><canvas id="cCat"></canvas></div></div>
+<div class="card"><h3>Distribución de urgencia (1 a 10)</h3><div class="cw"><canvas id="cUrg"></canvas></div></div>
+<div class="card"><h3>SLA comprometido (horas)</h3><div class="cw"><canvas id="cSla"></canvas></div></div>
+<div class="card"><h3>Clientes con mayor puntaje acumulado</h3><div class="cw"><canvas id="cCus"></canvas></div></div>
+<div class="card"><h3>Solicitudes por estado</h3><div class="cw"><canvas id="cSt"></canvas></div></div>
+</section>
+<section class="card">
+<h3>Detalle de solicitudes (clic en un encabezado para ordenar)</h3>
+<p id="count"></p>
+<div class="tw"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+<div id="empty">Ninguna solicitud coincide con los filtros.</div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(__APP_JS__)(__DATA_JSON__, __META_JSON__);
+</script>
+</body>
+</html>

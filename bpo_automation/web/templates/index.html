@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827"><title>BPO Decision Platform 2.0</title>
+  <link rel="icon" type="image/png" href="/static/unnamed.png">
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    @keyframes refresh-spin { to { transform: rotate(360deg); } }
+    .refresh-icon { display: inline-block; transform-origin: center; }
+    #refresh[aria-busy="true"] .refresh-icon { animation: refresh-spin .8s linear infinite; }
+    #refresh:disabled { opacity: .7; cursor: wait; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">B</div><div><strong>BPO Decision</strong><small>PLATFORM 2.0</small></div></div>
+    <div class="nav-label">WORKSPACE</div>
+    <button class="nav-item active" data-view="dashboard"><span>▦</span> Dashboard</button>
+    <button class="nav-item" data-view="requests"><span>▤</span> Solicitudes</button>
+    <button class="nav-item" data-view="agents"><span>♙</span> Agentes y TMO</button>
+    <button class="nav-item" data-view="reports"><span>▧</span> Reportes</button>
+    <div class="sidebar-bottom"><span class="status-dot"></span> Excel conectado <small>Almacenamiento local</small></div>
+  </aside>
+  <main class="main-area">
+    <header class="topbar"><div><div class="eyebrow">OPERACIONES / <span id="crumb">RESUMEN</span></div><h1 id="page-title">Dashboard operativo</h1></div><div class="top-actions"><span id="last-updated" class="muted">Cargando datos...</span><button class="btn btn-quiet" id="refresh" type="button" aria-busy="false"><span class="refresh-icon" aria-hidden="true">↻</span><span id="refresh-label">Actualizar</span></button></div></header>
+    <div id="notice" class="notice hidden" role="status"></div>
+
+    <section class="view active" id="view-dashboard">
+      <div class="section-heading"><div><h2>Resumen de operación</h2><p>Indicadores de solicitudes, prioridades y rendimiento.</p></div><span class="pill">EN VIVO · EXCEL</span></div>
+      <div class="kpi-grid" id="kpis"></div>
+      <div class="content-grid">
+        <article class="panel"><div class="panel-head"><div><h3>Solicitudes por prioridad</h3><p>Distribución del volumen actual</p></div></div><div id="priority-chart" class="bar-chart"></div></article>
+        <article class="panel"><div class="panel-head"><div><h3 id="agent-chart-title">Rendimiento TMO</h3><p id="agent-chart-description">Promedio por agente frente a la meta</p></div><div class="agent-chart-controls"><span class="target-chip" id="target-chip">Meta: 75 s</span><label class="sr-only" for="agent-view-select">Formato de visualización del rendimiento</label><select id="agent-view-select" class="agent-view-select" aria-label="Formato de visualización del rendimiento"><optgroup label="Tiempo medio de operación (TMO)"><option value="tmo-bar">Barras</option><option value="tmo-line">Línea</option></optgroup><optgroup label="Cumplimiento de la meta"><option value="percentage-bar">Barras (%)</option><option value="percentage-line">Línea (%)</option></optgroup></select></div></div><div id="agent-chart" class="agent-bars"></div></article>
+      </div>
+      <article class="panel"><div class="panel-head"><div><h3>Solicitudes prioritarias</h3><p>Casos que requieren seguimiento</p></div><button class="text-button" data-goto="requests">Ver todas →</button></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Cliente</th><th>Categoría</th><th>Prioridad</th><th>Urgencia</th><th>SLA</th><th>Estado</th></tr></thead><tbody id="priority-table"></tbody></table></div></article>
+    </section>
+
+    <section class="view" id="view-requests">
+      <div class="section-heading"><div><h2>Gestión de solicitudes</h2><p>Consulta, registra y actualiza los casos del libro Excel.</p></div><button class="btn btn-primary" id="toggle-request-form">＋ Nueva solicitud</button></div>
+      <form id="request-form" class="panel form-grid hidden">
+        <label>Cliente<input name="customer" required maxlength="160"></label><label>Categoría<input name="category" required value="Soporte técnico"></label>
+        <label>Tipo de cliente<select name="customer_tier"><option>Standard</option><option>Basic</option><option>Premium</option></select></label><label>Urgencia (1–10)<input name="urgency" type="number" min="1" max="10" value="5" required></label>
+        <label>SLA (horas)<input name="sla_hours" type="number" min="0" step="0.5" value="8" required></label><label>Estado<select name="status"><option>Open</option><option>In progress</option><option>Pending</option><option>Resolved</option></select></label>
+        <label class="full">Descripción<input name="issue" required maxlength="1000"></label><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar solicitud</button><button class="btn btn-quiet" type="button" id="cancel-request">Cancelar</button></div>
+      </form>
+      <div class="panel"><div class="toolbar"><input id="request-search" class="search" type="search" placeholder="Buscar ID, cliente o categoría..."><select id="priority-filter"><option value="">Todas las prioridades</option><option>CRITICAL</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select><select id="status-filter"><option value="">Todos los estados</option><option>Open</option><option>In progress</option><option>Pending</option><option>Resolved</option></select></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Cliente / asunto</th><th>Categoría</th><th>Prioridad</th><th>Score</th><th>SLA (h)</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="requests-table"></tbody></table></div><div class="table-foot" id="request-count"></div></div>
+    </section>
+
+    <section class="view" id="view-agents">
+      <div class="section-heading"><div><h2>Agentes y rendimiento TMO</h2><p>Seguimiento del tiempo medio de operación por agente.</p></div><button class="btn btn-primary" id="toggle-agent-form">＋ Registrar medición</button></div>
+      <form id="agent-form" class="panel form-grid hidden"><label>Agente<input name="agent_name" required></label><label>ID de solicitud<input name="request_id" required></label><label>Tiempo de proceso (segundos)<input name="process_seconds" type="number" min="0" step="0.1" required></label><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar medición</button><button class="btn btn-quiet" type="button" id="cancel-agent">Cancelar</button></div></form>
+      <div class="kpi-grid" id="agent-kpis"></div><article class="panel"><div class="panel-head"><div><h3>Rendimiento individual</h3><p>Comparación de TMO promedio con la meta configurada.</p></div></div><div class="table-wrap"><table><thead><tr><th>Agente</th><th>Casos válidos</th><th>TMO promedio</th><th>Meta</th><th>Dentro de meta</th><th>Estado</th></tr></thead><tbody id="agents-table"></tbody></table></div></article>
+    </section>
+
+    <section class="view" id="view-reports">
+      <div class="section-heading"><div><h2>Centro de reportes</h2><p>Genera los entregables con el motor original de reportes.</p></div><button class="btn btn-primary" id="generate-report">Generar reportes</button></div>
+      <form id="send-report-form" class="panel form-grid">
+        <label class="full">Destinatarios del correo<input id="report-recipients" type="text" required placeholder="correo@dominio.com, otro@dominio.com"><small class="muted">Separa varias direcciones con coma o punto y coma.</small></label>
+        <div class="form-actions"><button class="btn btn-primary" id="send-report-button" type="submit">Generar y enviar reporte</button></div>
+      </form>
+      <article class="panel"><div class="panel-head"><div><h3>Archivos disponibles</h3><p>Los archivos se guardan en la carpeta output/.</p></div></div><div class="report-list"><a href="/api/reports/BPO_Metricas.xlsx"><span class="file-icon">XLS</span><span><b>Reporte de métricas</b><small>BPO_Metricas.xlsx · Excel</small></span><strong>Descargar ↓</strong></a><a href="/api/reports/BPO_Dashboard.html"><span class="file-icon html">HTML</span><span><b>Dashboard exportable</b><small>BPO_Dashboard.html · HTML</small></span><strong>Descargar ↓</strong></a><a href="/api/reports/reporte.txt"><span class="file-icon txt">TXT</span><span><b>Resumen ejecutivo</b><small>reporte.txt · Texto</small></span><strong>Descargar ↓</strong></a></div></article>
+      <div class="callout"><b>Envío manual desde este dashboard.</b><p>Agrega los destinatarios y pulsa «Generar y enviar reporte».</p></div>
+    </section>
+    <footer> BPO Decision Platform 2.0 <span>·</span> FastAPI + Excel <span>·</span> Entorno local</footer>
+  </main>
+</div>
+<script src="/static/app.js"></script>
+</body></html>

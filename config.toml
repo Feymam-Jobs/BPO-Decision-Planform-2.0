@@ -1,0 +1,51 @@
+# Configuración del reporte. Las credenciales del correo NO van aquí: van en el archivo .env
+
+[input]
+# Excel de entrada: ruta completa (usa / en vez de \) o relativa a esta carpeta.
+# Si tus datos están en Google Sheets: Archivo > Descargar > Microsoft Excel (.xlsx) y apunta aquí.
+dataset = "data/sample_dataset.xlsx"
+# Hoja con las solicitudes (request_id, customer, category, customer_tier, urgency, sla_hours...).
+requests_sheet = "Solicitudes"
+# Hoja con los agentes (agent_name, request_id, process_seconds). Déjala vacía ("") si
+# tu Excel tiene una sola hoja con las columnas de agente y TMO.
+agents_sheet = "Agentes"
+
+[columns]
+# Columnas con el agente y el TMO. "auto" las busca por nombre (agent_name, process_seconds, tmo, aht...).
+# Si se llaman distinto, escribe el nombre exacto.
+agent = "auto"
+tmo = "auto"
+
+# Opcional: si los encabezados de las solicitudes no son los estándar, mapéalos aquí
+# (nombre estándar = "nombre en tu Excel"). Ejemplo:
+# [rename]
+# urgency = "Urgencia"
+# sla_hours = "SLA Horas"
+# customer_tier = "Nivel Cliente"
+
+[tmo]
+# Meta de TMO y unidad de la columna de TMO ("seconds" o "minutes"; la meta va en esa misma unidad).
+# 75 segundos es la meta que usa tu flujo de n8n. Un agente cumple (verde) si su TMO
+# promedio es MENOR O IGUAL a la meta; si la supera, no cumple (rojo).
+target = 75
+unit = "seconds"
+
+[output]
+# Carpeta donde se guardan el dashboard, el Excel de métricas, el reporte y (en --dry-run) el .eml.
+dir = "output"
+
+[report]
+timezone = "America/Bogota"
+# Cuántas solicitudes críticas/altas se listan en el cuerpo del correo (el resto va en los adjuntos).
+top_requests_in_email = 15
+
+[email]
+enabled = true
+to = ["isaiascanate40@gmail.com"]
+cc = []
+subject = "BPO | Reporte de rendimiento y prioridades"
+# Adjuntos: Excel original, dashboard HTML y Excel de métricas (con TMO por agente en verde/rojo).
+# El envío está desactivado por defecto para evitar correos accidentales.
+attach_dataset = true
+attach_dashboard = true
+attach_metrics_xlsx = true
